@@ -249,3 +249,78 @@ The activity stack is managed by the Android system, and developers can interact
 It's important to note that the behavior may vary depending on how the `PendingIntent` is configured and the launch mode of the activities involved. Developers can customize the behavior by specifying different launch modes, flags, or task affinity for the activities and `PendingIntent` configurations.
 
 ***
+
+## setResult Function
+
+The `setResult` function is used to set the result that will be returned to the activity that started the current activity when it finishes. It is typically used in conjunction with `startActivityForResult` to pass data or information back to the calling activity.
+
+The `setResult` function takes two parameters:
+1. `resultCode`: This indicates the result of the current activity. It can be one of the predefined result codes such as `RESULT_OK`, `RESULT_CANCELED`, or a custom result code defined by the developer.
+2. `data`: An optional `Intent` object that can carry additional data or information to be returned to the calling activity. This can be used to pass data such as integers, strings, or complex objects.
+
+Example: `setResult(RESULT_OK, resultIntent)`. This means that when the current activity finishes, it will return a result code of `RESULT_OK` to the calling activity (lets say, `MainActivity`) along with the `resultIntent` containing the extras.
+
+To handle the result in `MainActivity`, you override the `onActivityResult` method and retrieve the result data using the `requestCode` and `resultCode` parameters.
+
+Here's an example of how `setResult` and `onActivityResult` can be used together:
+
+In the called activity:
+```
+// Create an intent with the data to be returned
+Intent resultIntent = new Intent();
+resultIntent.putExtra("newCounter", newCounter); // Pass the updated counter value
+// Set the result and finish the activity
+setResult(RESULT_OK, resultIntent);
+finish();
+```
+
+In the calling activity (e.g., MainActivity):
+```
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+    if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
+        // Retrieve the result data
+        int newCounter = data.getIntExtra("newCounter", 0);
+        // Handle the result as needed
+        // ...
+    }
+}
+```
+
+In the above example, when the called activity finishes and calls `setResult`, the result code `RESULT_OK` and the `resultIntent` with the `newCounter` value are returned to `MainActivity`. In `MainActivity`'s `onActivityResult` method, you can retrieve the `newCounter` value and handle it accordingly.
+
+***
+
+## Handling Instances of MainActivity
+
+If you have multiple instances of the MainActivity and the RoundedCounterActivity, it can lead to unexpected behavior when passing data back and forth between them. To ensure that the result is sent to the correct instance of MainActivity, you can specify the launch mode for the MainActivity in the AndroidManifest.xml file.
+
+In your AndroidManifest.xml, add the `android:launchMode` attribute to the MainActivity declaration and set it to `"singleTop"`. Here's an example:
+
+```
+<activity
+    android:name=".MainActivity"
+    android:launchMode="singleTop"
+    ... >
+    ...
+</activity>
+```
+
+By setting the launch mode to `"singleTop"`, it ensures that if an instance of MainActivity already exists at the top of the task stack, a new instance will not be created. Instead, the existing instance will be used, and the result will be delivered to it.
+
+With this change, when you press the back button in RoundedCounterActivity, the result will be sent back to the existing instance of MainActivity.
+
+Note: If you want to bring the existing instance of MainActivity to the foreground when the result is delivered, you can use the `Intent.FLAG_ACTIVITY_SINGLE_TOP` flag when creating the result intent in the RoundedCounterActivity, like this:
+
+```
+Intent resultIntent = new Intent(RoundedCounterActivity.this, MainActivity.class);
+resultIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+resultIntent.putExtra("newCounter", newCounter);
+setResult(RESULT_OK, resultIntent);
+finish();
+```
+
+This flag ensures that the existing instance of MainActivity is used and brought to the foreground, if necessary, to receive the result.
+
+***

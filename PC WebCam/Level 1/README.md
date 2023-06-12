@@ -289,6 +289,8 @@ private void createCaptureSession() {
 }
 ```
 
+[Example Code File](ExampleMainActivityCmera2.java)
+
 In this code, we've added a `SurfaceView` to the layout to serve as the preview surface for the camera. We obtain the `SurfaceHolder` from the `SurfaceView` and use it to create a capture session with the camera device. The `createCaptureSession()` method takes a list of output `Surface` objects, in this case, we only add the `Surface` from the `SurfaceView` to stream the camera preview.
 
 Once the capture session is configured successfully in the `onConfigured()` callback, you can start capturing or streaming images using the camera device. You can add the necessary logic to capture images, record videos, or perform other operations based on your requirements.
@@ -372,6 +374,170 @@ The `android.hardware.camera2` package provides classes and interfaces for worki
 These are some of the important classes and their methods involved in the camera capture process using the `android.hardware.camera2` package. By utilizing these classes and their methods, you can control the camera device, create capture requests, configure capture sessions, capture images, and retrieve capture results in your Android application.
 
 ---
+
+# [CaptureRequest](https://developer.android.com/reference/android/hardware/camera2/CaptureRequest)
+
+In Android Camera2 API, the capture mode is determined by the template type used when creating a `CaptureRequest.Builder` object. The template types are predefined constants available in the `CameraDevice` class, and they define common use cases for capturing images. Here are some of the available capture modes and how to set them:
+
+1. Still Image Capture:
+   - Use `CameraDevice.TEMPLATE_STILL_CAPTURE` template.
+   - Example:
+     ```java
+     CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+     ```
+
+2. Continuous Preview (Streaming) Capture:
+   - Use `CameraDevice.TEMPLATE_PREVIEW` template.
+   - Example:
+     ```java
+     CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+     ```
+
+3. Video Recording:
+   - Use `CameraDevice.TEMPLATE_RECORD` template.
+   - Example:
+     ```java
+     CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+     ```
+
+4. Burst Capture:
+   - Use `CameraDevice.TEMPLATE_STILL_CAPTURE` template and set the `CaptureRequest.CONTROL_CAPTURE_INTENT` to `CaptureRequest.CONTROL_CAPTURE_INTENT_STILL_CAPTURE` and `CaptureRequest.CONTROL_AE_MODE` to `CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH`.
+   - Example:
+     ```java
+     CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+     captureRequestBuilder.set(CaptureRequest.CONTROL_CAPTURE_INTENT, CaptureRequest.CONTROL_CAPTURE_INTENT_STILL_CAPTURE);
+     captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH);
+     ```
+
+These are just a few examples of capture modes available in Camera2 API. You can explore more template types in the `CameraDevice` class based on your specific requirements.
+
+After setting the capture mode using the appropriate template type, you can further customize the capture request by adding additional parameters such as the target `Surface` and other settings like exposure, focus, and flash control.
+
+[Camera capture sessions and requests](https://developer.android.com/training/camera2/capture-sessions-requests)
+
+Here's an example of how you can create a CaptureRequest for recording audio and video using the Android Camera2 API:
+
+```java
+private void createCaptureRequest(CameraDevice cameraDevice, Surface previewSurface, Surface recordSurface) {
+    try {
+        // Create a capture request builder
+        CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+        
+        // Set the target surfaces for the capture request
+        captureRequestBuilder.addTarget(previewSurface);
+        captureRequestBuilder.addTarget(recordSurface);
+        
+        // Set the desired capture parameters
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH);
+        // Add more capture parameters as needed
+        
+        // Build the capture request
+        CaptureRequest captureRequest = captureRequestBuilder.build();
+        
+        // Use the capture request to start the preview
+        cameraCaptureSession.setRepeatingRequest(captureRequest, null, null);
+    } catch (CameraAccessException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+In this example, we assume that you already have a `CameraDevice` object and a `CameraCaptureSession` set up. The `previewSurface` is the surface where you want to display the preview, and the `recordSurface` is the surface where you want to record the audio and video data.
+
+You can modify the capture parameters according to your requirements. The example sets the control mode, autofocus mode, and auto-exposure mode to suitable values for recording video. You can add more parameters and customize them based on your app's needs.
+
+Note that you'll need to handle the permission requests and surface setup separately before calling this method. Additionally, make sure you have the necessary permissions and surface configurations in place before starting the camera capture session.
+
+Remember to release the resources properly when you're done with the camera and capture session.
+
+1. `captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);`
+   - This line sets the control mode for the capture request to "auto." In auto mode, the camera device automatically adjusts various parameters, such as focus, exposure, and white balance, based on the scene conditions. This allows the camera to optimize the image capture settings for different scenarios.
+
+2. `captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO);`
+   - This line sets the autofocus (AF) mode to "continuous video" mode. In continuous video AF mode, the camera continuously adjusts focus while recording video to ensure that the subject remains in focus. It continuously analyzes the video frames and makes adjustments as necessary to maintain focus on moving subjects.
+
+3. `captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH);`
+   - This line sets the auto-exposure (AE) mode to "auto flash" mode. In auto flash mode, the camera device automatically determines whether to use the flash while capturing images or recording video. It analyzes the scene conditions, such as low light or backlighting, and triggers the flash if necessary to ensure proper exposure.
+
+By setting these capture request parameters, you are configuring the camera to operate in an automatic mode, allowing it to adjust focus, exposure, and flash settings based on the scene conditions. This helps in capturing high-quality video with proper focus and exposure levels.
+
+Please note that the specific consequences of these settings may vary depending on the device and camera capabilities. It's recommended to test your app on different devices to ensure consistent behavior across different camera implementations.
+
+---
+
+What is the difference between the following two?
+
+First:
+```java
+private void createCaptureRequest(CameraDevice cameraDevice, Surface previewSurface, Surface recordSurface) {
+    try {
+        // Create a capture request builder
+        CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+        
+        // Set the target surfaces for the capture request
+        captureRequestBuilder.addTarget(previewSurface);
+        captureRequestBuilder.addTarget(recordSurface);
+        
+        // Set the desired capture parameters
+        captureRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_CONTINUOUS_VIDEO);
+        captureRequestBuilder.set(CaptureRequest.CONTROL_AE_MODE, CameraMetadata.CONTROL_AE_MODE_ON_AUTO_FLASH);
+        // Add more capture parameters as needed
+        
+        // Build the capture request
+        CaptureRequest captureRequest = captureRequestBuilder.build();
+        
+        // Use the capture request to start the preview
+        cameraCaptureSession.setRepeatingRequest(captureRequest, null, null);
+    } catch (CameraAccessException e) {
+        e.printStackTrace();
+    }
+}
+```
+Second:
+```java
+private void startStreaming() {
+    // Create a capture request for streaming
+    try {
+        CaptureRequest.Builder captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+        captureRequestBuilder.addTarget(captureSession.getSurface());
+
+        // Start streaming
+        captureSession.setRepeatingRequest(captureRequestBuilder.build(), null, null);
+    } catch (CameraAccessException e) {
+        e.printStackTrace();
+    }
+}
+```
+
+The main difference between the two code snippets is the template used to create the CaptureRequest and the set of target surfaces.
+
+In the first code snippet:
+- The template used to create the CaptureRequest is `CameraDevice.TEMPLATE_RECORD`. This template is typically used when capturing video or recording audio-video content. It sets up the camera parameters optimized for recording purposes.
+- Two target surfaces are added to the CaptureRequest: `previewSurface` and `recordSurface`. These surfaces define the output destinations for the captured data. In this case, the previewSurface is likely used to display the camera preview on the screen, and the recordSurface is used to record the video.
+
+On the other hand, in the second code snippet:
+- The template used to create the CaptureRequest is `CameraDevice.TEMPLATE_PREVIEW`. This template is used for a live camera preview without explicitly capturing the frames. It sets up the camera parameters optimized for real-time preview purposes.
+- Only one target surface is added to the CaptureRequest, which is obtained from the captureSession (`captureSession.getSurface()`). This surface is typically associated with a preview view or a SurfaceTexture for displaying the camera preview on the screen.
+
+So, the key difference lies in the template used and the number of target surfaces. The first code snippet is more suited for capturing video and recording audio-video content, while the second code snippet is focused on providing a live camera preview without explicitly capturing the frames.
+
+---
+
+# Can we use both the front and back camera at the sme time?
+
+Yes, it is possible to use both the front and back cameras simultaneously on some devices. This feature is commonly known as "dual-camera" or "multi-camera" support.
+
+To use both cameras simultaneously, you would typically create two separate CameraDevices, one for the front camera and one for the back camera. You can use the CameraManager to obtain the IDs of the available cameras and then open each camera individually.
+
+Once you have both camera devices open, you can create separate CaptureSessions for each camera and configure them to capture or stream images simultaneously. Each CaptureSession will have its own set of CaptureRequest objects and target surfaces.
+
+However, it's important to note that not all devices support simultaneous usage of both front and back cameras. The availability of this feature depends on the device's hardware capabilities and the specific Camera2 API implementation on the device. Therefore, it's recommended to check the device's documentation or test the functionality on the target device to ensure its support for dual-camera usage.
+
+---
+
 
 
 

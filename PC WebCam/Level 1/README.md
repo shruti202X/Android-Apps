@@ -143,7 +143,7 @@ To capture or stream images from a camera device, the application must first cre
 [Example of Java code that demonstrates how to access a camera using the android.hardware.camera2 interface in Android](ExampleMainActivityCamera.java)
 
 If you need to ensure that the camera device supports certain capabilities, such as autofocus or flash, before opening the camera, then the first approach with capability checks is more appropriate. By checking the capabilities, you can make decisions based on the supported features of the camera. For example, you may want to display a warning message or disable certain camera functionalities if the camera lacks autofocus or flash capabilities.
-```
+```java
 int[] capabilities = characteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
 if (capabilities != null) {
     for (int capability : capabilities) {
@@ -158,7 +158,7 @@ if (capabilities != null) {
 ```
 
 On the other hand, if your app doesn't have any specific requirements regarding camera capabilities and you just need to open the camera regardless of the supported features, then the second approach without capability checks is simpler and more straightforward.
-```
+```java
 private void openCamera() {
     CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
     try {
@@ -170,8 +170,208 @@ private void openCamera() {
 }
 ```
 
+[openCamera](https://developer.android.com/reference/android/hardware/camera2/CameraManager#openCamera(java.lang.String,%20android.hardware.camera2.CameraDevice.StateCallback,%20android.os.Handler)): Open a connection to a camera with the given ID.
+[CameraDevice.StateCallback](https://developer.android.com/reference/android/hardware/camera2/CameraDevice.StateCallback): A callback objects for receiving updates about the state of a camera device.
+
+In the above code, we have created a Camera Manager object and we have used it to simply open an available camera.
+
 ---
 
+
+To capture and stream images from the opened camera device, you can modify the code as follows:
+
+1. Add a `SurfaceView` or `TextureView` to your activity's layout XML file (`activity_main.xml` in this example):
+```xml
+<FrameLayout
+    android:id="@+id/cameraPreviewContainer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <SurfaceView
+        android:id="@+id/cameraPreviewSurface"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+</FrameLayout>
+```
+
+2. Modify the `openCamera()` method to create a capture session and configure it to stream images to the `SurfaceView`:
+```java
+private void openCamera() {
+    CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+    try {
+        String cameraId = cameraManager.getCameraIdList()[0]; // Assuming first camera
+        CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraId);
+
+        // Check if the camera supports the desired features
+        // Here, we are checking for AUTOFOCUS and FLASH support
+        int[] capabilities = characteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES);
+        if (capabilities != null) {
+            for (int capability : capabilities) {
+                if (capability == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_AUTOFOCUS
+                        || capability == CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_FLASH) {
+                    // Camera supports the desired features, proceed with opening the camera
+                    cameraManager.openCamera(cameraId, new CameraDevice.StateCallback() {
+                        @Override
+                        public void onOpened(@NonNull CameraDevice camera) {
+                            cameraDevice = camera;
+                            // Camera is successfully opened, you can start using it
+                            Log.d(TAG, "Camera opened");
+                            // Create a capture session and configure it
+                            createCaptureSession();
+                        }
+
+                        @Override
+                        public void onDisconnected(@NonNull CameraDevice camera) {
+                            cameraDevice.close();
+                            cameraDevice = null;
+                            Log.d(TAG, "Camera disconnected");
+                        }
+
+                        @Override
+                        public void onError(@NonNull CameraDevice camera, int error) {
+                            cameraDevice.close();
+                            cameraDevice = null;
+                            Log.e(TAG, "Camera error: " + error);
+                        }
+                    }, null);
+                    return;
+                }
+            }
+        }
+    } catch (CameraAccessException e) {
+        e.printStackTrace();
+    }
+}
+
+private void createCaptureSession() {
+    SurfaceView cameraPreviewSurfaceView = findViewById(R.id.cameraPreviewSurface);
+    SurfaceHolder surfaceHolder = cameraPreviewSurfaceView.getHolder();
+    surfaceHolder.addCallback(new SurfaceHolder.Callback() {
+        @Override
+        public void surfaceCreated(@NonNull SurfaceHolder holder) {
+            try {
+                // Create a capture session with the camera device
+                List<Surface> outputSurfaces = new ArrayList<>();
+                outputSurfaces.add(holder.getSurface());
+                cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
+                    @Override
+                    public void onConfigured(@NonNull CameraCaptureSession session) {
+                        // Capture session is successfully configured
+                        // You can start capturing or streaming images
+                        Log.d(TAG, "Capture session configured");
+                        // Start capturing or streaming images here
+                    }
+
+                    @Override
+                    public void onConfigureFailed(@NonNull CameraCaptureSession session) {
+                        // Failed to configure capture session
+                        Log.e(TAG, "Failed to configure capture session");
+                    }
+                }, null);
+            } catch (CameraAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
+            // Surface
+
+ size or format changed
+            // Handle the changes if needed
+        }
+
+        @Override
+        public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+            // Surface destroyed
+            // Clean up resources if needed
+        }
+    });
+}
+```
+
+In this code, we've added a `SurfaceView` to the layout to serve as the preview surface for the camera. We obtain the `SurfaceHolder` from the `SurfaceView` and use it to create a capture session with the camera device. The `createCaptureSession()` method takes a list of output `Surface` objects, in this case, we only add the `Surface` from the `SurfaceView` to stream the camera preview.
+
+Once the capture session is configured successfully in the `onConfigured()` callback, you can start capturing or streaming images using the camera device. You can add the necessary logic to capture images, record videos, or perform other operations based on your requirements.
+
+Remember to handle the lifecycle of the camera properly. In the provided code, the camera device is closed in the `onDestroy()` method to release resources when the activity is destroyed.
+
+---
+
+The camera lifecycle in Android consists of several stages that you need to manage to ensure proper usage and resource handling. Here are the various stages of the camera lifecycle:
+
+1. Requesting Camera Permissions:
+   - Before accessing the camera, you need to request the necessary camera permissions from the user. You can use the `requestPermissions()` method to request the `Manifest.permission.CAMERA` permission from the user.
+
+2. Opening the Camera:
+   - Once the camera permission is granted, you can proceed to open the camera using the `CameraManager` class.
+   - Call the `openCamera()` method on the `CameraManager` instance to open the camera.
+   - Provide a `CameraDevice.StateCallback` object as a parameter to handle the camera device's state changes.
+
+3. Configuring the Capture Session:
+   - After successfully opening the camera, the next step is to configure the capture session.
+   - Use the `CameraDevice` instance obtained from the `onOpened()` callback to create a capture session.
+   - You need to provide a list of output `Surface` objects to the `createCaptureSession()` method. These surfaces define where the captured images or preview frames will be sent.
+   - Implement the `CameraCaptureSession.StateCallback` interface to handle session state changes.
+   - In the `onConfigured()` callback, you can start capturing or streaming images.
+
+4. Capturing or Streaming Images:
+   - Once the capture session is configured, you can start capturing or streaming images.
+   - Use the `CameraCaptureSession` instance obtained from the `onConfigured()` callback to create capture requests.
+   - Capture requests define the parameters for capturing images, such as the target `Surface` and the desired capture mode (e.g., still image or continuous streaming).
+   - You can use methods like `capture()` or `setRepeatingRequest()` on the `CameraCaptureSession` to initiate capture requests.
+
+5. Handling Camera Events:
+   - During the camera usage, you need to handle various camera events to ensure smooth operation.
+   - Implement the appropriate methods of the `CameraDevice.StateCallback` interface to handle events like the camera being opened, disconnected, or encountering an error.
+   - Implement the `CameraCaptureSession.StateCallback` interface to handle events related to the capture session, such as it being configured or encountering an error.
+
+6. Releasing Camera Resources:
+   - Properly release camera resources when you no longer need them to avoid resource leaks.
+   - Close the `CameraDevice` and `CameraCaptureSession` instances in the appropriate callbacks, such as `onDestroyed()` or when you are finished with the camera.
+   - Releasing camera resources ensures that other applications can access the camera and improves the overall system performance.
+
+By managing these stages of the camera lifecycle, you can effectively utilize the camera functionality in your Android app while handling resource allocation, configuration changes, and camera events gracefully.
+
+---
+
+The `android.hardware.camera2` package provides classes and interfaces for working with the camera device in Android. Here are the important classes and their methods involved in the camera capture process:
+
+1. `CameraManager` class:
+   - Provides methods to access and control camera devices.
+   - `getCameraIdList()`: Returns an array of camera IDs available on the device.
+   - `getCameraCharacteristics(String cameraId)`: Returns the characteristics of a specific camera.
+
+2. `CameraCharacteristics` class:
+   - Provides static metadata about a camera device.
+   - `get(CameraCharacteristics.Key<T> key)`: Retrieves a specific camera characteristic using its key.
+
+3. `CameraDevice` class:
+   - Represents a single camera device that can be opened for capturing images or streaming.
+   - `createCaptureSession(List<Surface> outputs, CameraCaptureSession.StateCallback callback, Handler handler)`: Creates a capture session for the camera device.
+   - `createCaptureRequest(int templateType)`: Creates a capture request for capturing images with specific settings.
+   - `setRepeatingRequest(CaptureRequest request, CameraCaptureSession.CaptureCallback listener, Handler handler)`: Repeatedly captures images with the specified capture request.
+
+4. `CameraCaptureSession` class:
+   - Represents a configured capture session for the camera device.
+   - `capture(CaptureRequest request, CameraCaptureSession.CaptureCallback listener, Handler handler)`: Captures a single image with the specified capture request.
+   - `setRepeatingRequest(CaptureRequest request, CameraCaptureSession.CaptureCallback listener, Handler handler)`: Repeatedly captures images with the specified capture request.
+
+5. `CaptureRequest` class:
+   - Encapsulates the settings and target surfaces for a single image capture.
+   - `Builder` inner class: Helps construct a CaptureRequest object.
+   - `addTarget(Surface outputTarget)`: Adds a target surface to the capture request.
+
+6. `CaptureResult` class:
+   - Contains the result metadata for a single image capture.
+   - `get(CaptureResult.Key<T> key)`: Retrieves a specific result metadata using its key.
+
+7. `Surface` class:
+   - Represents an output target for the camera image capture.
+   - Various constructors to create a surface from different sources (e.g., SurfaceView, SurfaceTexture, ImageReader).
+
+These are some of the important classes and their methods involved in the camera capture process using the `android.hardware.camera2` package. By utilizing these classes and their methods, you can control the camera device, create capture requests, configure capture sessions, capture images, and retrieve capture results in your Android application.
+
+---
 
 
 

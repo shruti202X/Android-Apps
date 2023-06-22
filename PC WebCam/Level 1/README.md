@@ -289,7 +289,7 @@ private void createCaptureSession() {
 }
 ```
 
-[Example Code File](ExampleMainActivityCmera2.java)
+[Example Code File](ExampleMainActivityCamera2.java)
 
 In this code, we've added a `SurfaceView` to the layout to serve as the preview surface for the camera. We obtain the `SurfaceHolder` from the `SurfaceView` and use it to create a capture session with the camera device. The `createCaptureSession()` method takes a list of output `Surface` objects, in this case, we only add the `Surface` from the `SurfaceView` to stream the camera preview.
 

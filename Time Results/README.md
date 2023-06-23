@@ -1,8 +1,10 @@
 # TIme Results
 
-Time's Result : What are the results from time
+**Time's Result** : What are the results from time
+
 OR
-Time Results : Analyze results with the dimension of time
+
+**Time Results** : Analyze results with the dimension of time
 
 ---
 
@@ -403,4 +405,224 @@ Note: Don't forget to include the necessary drawables and colors in your project
 
 ---
 
+## References
 
+1. [GeeksForGeeks](https://www.geeksforgeeks.org/how-to-implement-circular-progressbar-in-android/)
+
+The `<rotate>` element in Android XML is used to apply rotation transformations to its child elements. It allows you to rotate a shape, drawable, or view by specifying the starting and ending angles of rotation.
+
+Here are the main attributes used with the `<rotate>` element:
+
+- `android:fromDegrees`: Specifies the starting angle of rotation in degrees. This attribute defines the initial position of the child element.
+- `android:toDegrees`: Specifies the ending angle of rotation in degrees. This attribute defines the final position of the child element.
+- `android:pivotX` and `android:pivotY`: Optional attributes that specify the pivot point for the rotation. These attributes determine the point around which the rotation occurs. By default, the rotation is performed around the center of the child element.
+
+The rotation angle is measured in degrees, where positive values indicate clockwise rotation and negative values indicate counter-clockwise rotation. The rotation is applied in a circular manner, allowing you to create spinning, flipping, or other rotation effects.
+
+Here's an example usage of the `<rotate>` element:
+
+```xml
+<rotate
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fromDegrees="0"
+    android:toDegrees="45">
+  
+    <!-- Child element goes here -->
+  
+</rotate>
+```
+
+In the above example, the child element will be rotated from 0 degrees to 45 degrees. You can place any drawable or view inside the `<rotate>` element to apply the rotation effect.
+
+Note that the `<rotate>` element can be combined with other transformation elements, such as `<scale>`, `<translate>`, and `<alpha>`, to achieve complex transformations on the child elements.
+
+2. [CircularProgressIndicator](https://developer.android.com/reference/com/google/android/material/progressindicator/CircularProgressIndicator)
+
+To use the Circular Progress Indicator from the Material Components library in your Android timer app, follow these steps:
+
+1. Add the Material Components library to your project by adding the following dependency to your app-level build.gradle file:
+
+```groovy
+implementation 'com.google.android.material:material:1.4.0'
+```
+
+2. In your layout XML file (e.g., `activity_timer.xml`), add the Circular Progress Indicator as a child view where you want it to appear. You can customize the size, style, and other attributes as needed. Here's an example:
+
+```xml
+<com.google.android.material.progressindicator.CircularProgressIndicator
+    android:id="@+id/progress_indicator"
+    android:layout_width="200dp"
+    android:layout_height="200dp"
+    android:progress="0"
+    app:indicatorSize="medium"
+    app:trackColor="#E0E0E0"
+    app:indicatorColor="@color/colorPrimary"
+    app:indeterminate="false"
+    app:trackCornerRadius="100dp"
+    app:trackThickness="10dp"
+    app:indicatorDirectionCircular="clockwise"
+    app:indicatorInset="10dp"
+    app:indicatorRotation="0"
+    app:progressTint="@color/colorPrimary"
+    app:progressTintMode="src_atop"
+    app:showAnimationBehavior="auto"
+    app:hideAnimationBehavior="auto" />
+```
+
+3. In your Java file (e.g., `TimerActivity.java`), reference the Circular Progress Indicator view and update its progress as needed. Here's an example:
+
+```java
+import com.google.android.material.progressindicator.CircularProgressIndicator;
+
+public class TimerActivity extends AppCompatActivity {
+    private CircularProgressIndicator progressIndicator;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_timer);
+
+        // Reference the Circular Progress Indicator view
+        progressIndicator = findViewById(R.id.progress_indicator);
+
+        // Update the progress value
+        int progress = 50; // Set your desired progress value here
+        progressIndicator.setProgressCompat(progress, true);
+    }
+    // ...
+}
+```
+
+4. Customize the progress value (`progress`) based on your timer logic to update the Circular Progress Indicator accordingly.
+
+Make sure to customize the attributes and styling of the Circular Progress Indicator to fit your desired design and functionality. Refer to the official documentation of the CircularProgressIndicator class for more information on available attributes and customization options.
+
+Remember to import the necessary classes in your Java file and sync your project after adding the Material Components library dependency.
+
+The `setProgressCompat()` method is a convenient method provided by the CircularProgressIndicator class in the Material Components library. It allows you to set the progress value for the Circular Progress Indicator.
+
+The signature of the `setProgressCompat()` method is as follows:
+
+```java
+void setProgressCompat(int progress, boolean animated)
+```
+
+- `progress`: The desired progress value to set for the Circular Progress Indicator. It represents the current progress of the task or operation, typically measured as a percentage. The valid range of the progress value is between 0 and the maximum progress value, which is determined by the `setMax()` method or the `app:indicatorMaximum` attribute in the XML.
+- `animated`: A boolean value indicating whether to animate the progress change or not. If `true`, the progress change will be animated; if `false`, the progress will be updated immediately without animation.
+
+Other similar methods available in the CircularProgressIndicator class include:
+
+- `setProgress(int progress)`: This method sets the progress value without animation. It is equivalent to `setProgressCompat(progress, false)`.
+- `setMax(int max)`: This method sets the maximum progress value that the Circular Progress Indicator can reach.
+- `getProgress()`: This method retrieves the current progress value of the Circular Progress Indicator.
+- `getMax()`: This method retrieves the maximum progress value of the Circular Progress Indicator.
+
+These methods provide control over the progress value and behavior of the Circular Progress Indicator, allowing you to update the progress in real-time and customize its appearance according to your application's requirements.
+
+---
+
+## Placing Button in the middle of circular progress bar
+
+To position a start and stop button in the middle of the progress bar, you can use different implementations depending on your preferred approach. Here are two possible implementations:
+
+1. Overlaying the Buttons on the Progress Bar:
+   - In your layout XML file, you can use a RelativeLayout or ConstraintLayout to position the Circular Progress Indicator and the start/stop buttons.
+   - Place the Circular Progress Indicator and the buttons within the same parent layout.
+   - Adjust the positioning of the elements using appropriate layout constraints or rules. For example, you can align the buttons to the center of the parent layout and adjust the margins to overlay them on the Circular Progress Indicator.
+   - Here's an example XML snippet demonstrating this approach:
+
+```xml
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/progress_indicator"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        app:indicatorSize="medium"
+        app:trackColor="#E0E0E0"
+        app:indicatorColor="@color/colorPrimary"
+        app:indeterminate="false"
+        app:trackCornerRadius="100dp"
+        app:trackThickness="10dp" />
+
+    <Button
+        android:id="@+id/start_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start"
+        android:layout_centerInParent="true" />
+
+    <Button
+        android:id="@+id/stop_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:layout_centerInParent="true" />
+
+</RelativeLayout>
+```
+
+2. Creating a Custom Progress Bar Component:
+   - Create a custom compound component that encapsulates both the Circular Progress Indicator and the start/stop buttons.
+   - Define a custom XML layout for your compound component, where you can position the Circular Progress Indicator and buttons using appropriate layout constraints.
+   - In your custom compound component class, inflate the custom XML layout and set references to the Circular Progress Indicator and buttons.
+   - Expose methods in your custom compound component class to update the progress, handle button clicks, and provide any necessary functionality.
+   - Here's an example custom compound component implementation:
+
+```java
+public class ProgressBarWithButtons extends RelativeLayout {
+    private CircularProgressIndicator progressIndicator;
+    private Button startButton;
+    private Button stopButton;
+
+    public ProgressBarWithButtons(Context context) {
+        super(context);
+        init();
+    }
+
+    public ProgressBarWithButtons(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public ProgressBarWithButtons(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        init();
+    }
+
+    private void init() {
+        LayoutInflater inflater = LayoutInflater.from(getContext());
+        inflater.inflate(R.layout.custom_progress_bar_with_buttons, this, true);
+
+        progressIndicator = findViewById(R.id.progress_indicator);
+        startButton = findViewById(R.id.start_button);
+        stopButton = findViewById(R.id.stop_button);
+
+        // Set click listeners for the buttons and handle the logic
+        startButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle start button click
+            }
+        });
+
+        stopButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Handle stop button click
+            }
+        });
+    }
+
+    // Add custom methods to update progress, handle button clicks, etc.
+}
+```
+
+In this approach, you would create a custom XML layout file (`custom_progress_bar`) for the compound component and define the Circular Progress Indicator, start/stop buttons, and their positioning within the layout.
+
+Choose the approach that suits your requirements and implement the necessary layout and logic to achieve the desired outcome.
+
+---

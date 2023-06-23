@@ -131,3 +131,307 @@ Remember that the internal storage is specific to your app and is not accessible
 
 ## [Save data using SQLite](https://developer.android.com/training/data-storage/sqlite)
 
+MainActivity.java:
+
+```java
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import ClickDbHelper;
+
+public class MainActivity extends AppCompatActivity {
+    private ClickDbHelper dbHelper;
+    private EditText textBox;
+    private Button button;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // Initialize database helper and UI elements
+        dbHelper = new ClickDbHelper(this);
+        textBox = findViewById(R.id.editText);
+        button = findViewById(R.id.button);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String userText = textBox.getText().toString();
+                long res = insertRow(userText);
+                if (res == -1) {
+                    Toast.makeText(MainActivity.this, "Insertion Failed", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(MainActivity.this, "Insertion Successful", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+}
+```
+
+ClickDbHelper.java:
+
+```java
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.provider.BaseColumns;
+import android.content.Context;
+
+public class ClickDbHelper extends SQLiteOpenHelper {
+
+    public static final class MyContract {
+        // To prevent someone from accidentally instantiating the contract class,
+        // make the constructor private.
+        private MyContract() {}
+
+        /* Inner class that defines the table contents */
+        public static class Click implements BaseColumns {
+            public static final String TABLE_NAME = "Click";
+            public static final String COLUMN_1 = "Time";
+            public static final String COLUMN_2 = "Description";
+        }
+    }
+
+    //https://www.sqlitetutorial.net/sqlite-date/
+    //https://alvinalexander.com/android/sqlite-default-datetime-field-current-time-now/
+    //https://www.sqlite.org/datatype3.html
+
+    private static final String SQL_CREATE_ENTRIES =
+        "CREATE TABLE " + MyContract.Click.TABLE_NAME + " (" +
+        MyContract.Click._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
+        MyContract.Click.COLUMN_1 + " DATETIME DEFAULT CURRENT_TIMESTAMP," +
+        MyContract.Click.COLUMN_2 + " TEXT)";
+
+    private static final String SQL_DELETE_ENTRIES =
+        "DROP TABLE IF EXISTS " + MyContract.Click.TABLE_NAME;
+
+    // If you change the database schema, you must increment the database version.
+    public static final int DATABASE_VERSION = 1;
+    public static final String DATABASE_NAME = "FeedReader.db";
+
+    public ClickDbHelper(Context context) {
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(SQL_CREATE_ENTRIES);
+    }
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        // This database is only a cache for online data, so its upgrade policy is
+        // to simply to discard the data and start over
+        db.execSQL(SQL_DELETE_ENTRIES);
+        onCreate(db);
+    }
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
+    }
+
+    public long insertRow(String description){
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(MyContract.Click.COLUMN_2, description);
+
+        // Insert the new row, returning the primary key value of the new row
+        long newRowId = db.insert(MyContract.Click.TABLE_NAME, null, values);
+
+        db.close();
+
+        return newRowId;
+    }
+}
+```
+
+---
+
+## Read data from an SQLite database in Android
+
+1. Create an instance of your `ClickDbHelper` class and get a readable database:
+   ```java
+   ClickDbHelper dbHelper = new ClickDbHelper(context);
+   SQLiteDatabase db = dbHelper.getReadableDatabase();
+   ```
+
+2. Define a projection, which specifies the columns you want to retrieve from the table:
+   ```java
+   String[] projection = {
+       ClickDbHelper.MyContract.Click._ID,
+       ClickDbHelper.MyContract.Click.COLUMN_1,
+       ClickDbHelper.MyContract.Click.COLUMN_2
+   };
+   ```
+
+3. Perform a query on the database using the `query` method:
+   ```java
+   Cursor cursor = db.query(
+       ClickDbHelper.MyContract.Click.TABLE_NAME,
+       projection,
+       null,
+       null,
+       null,
+       null,
+       null
+   );
+   ```
+
+   This query retrieves all columns and rows from the specified table. You can customize the parameters of the `query` method based on your specific requirements (e.g., adding selection, selection arguments, sorting order).
+
+4. Iterate over the `Cursor` to access the retrieved data:
+   ```java
+   while (cursor.moveToNext()) {
+       long id = cursor.getLong(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click._ID));
+       String column1 = cursor.getString(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click.COLUMN_1));
+       String column2 = cursor.getString(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click.COLUMN_2));
+       
+       // Process the retrieved data as needed
+   }
+   ```
+
+   In the above code, `getColumnIndexOrThrow` retrieves the index of the column based on the column name.
+
+5. Close the `Cursor` and the database connection when you're done:
+   ```java
+   cursor.close();
+   db.close();
+   ```
+
+Here's an example that demonstrates the complete process:
+
+```java
+ClickDbHelper dbHelper = new ClickDbHelper(context);
+SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+String[] projection = {
+    ClickDbHelper.MyContract.Click._ID,
+    ClickDbHelper.MyContract.Click.COLUMN_1,
+    ClickDbHelper.MyContract.Click.COLUMN_2
+};
+
+Cursor cursor = db.query(
+    ClickDbHelper.MyContract.Click.TABLE_NAME,
+    projection,
+    null,
+    null,
+    null,
+    null,
+    null
+);
+
+while (cursor.moveToNext()) {
+    long id = cursor.getLong(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click._ID));
+    String column1 = cursor.getString(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click.COLUMN_1));
+    String column2 = cursor.getString(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click.COLUMN_2));
+    
+    // Process the retrieved data as needed
+}
+
+cursor.close();
+db.close();
+```
+
+Make sure to adjust the code based on your specific table structure, column names, and query requirements.
+
+---
+
+To display SQLite database data in a table format in Android, you can use a `ListView` along with a custom adapter. Here's an example of how you can achieve this:
+
+1. Create a new layout file called `list_item_layout.xml` for each row in the table:
+   ```xml
+   <!-- list_item_layout.xml -->
+   <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:orientation="horizontal">
+
+       <TextView
+           android:id="@+id/textViewColumn1"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:layout_weight="1"
+           android:textAppearance="@android:style/TextAppearance.Medium"/>
+
+       <TextView
+           android:id="@+id/textViewColumn2"
+           android:layout_width="0dp"
+           android:layout_height="wrap_content"
+           android:layout_weight="1"
+           android:textAppearance="@android:style/TextAppearance.Medium"/>
+   </LinearLayout>
+   ```
+
+2. Modify your `MainActivity` to include a `ListView` and set up the adapter to display the data:
+   ```java
+   import android.support.v7.app.AppCompatActivity;
+   import android.os.Bundle;
+   import android.view.View;
+   import android.widget.AdapterView;
+   import android.widget.ArrayAdapter;
+   import android.widget.ListView;
+   import android.database.Cursor;
+   import com.yourpackage.ClickDbHelper;
+
+   public class MainActivity extends AppCompatActivity {
+       private ClickDbHelper dbHelper;
+       private ListView listView;
+
+       @Override
+       protected void onCreate(Bundle savedInstanceState) {
+           super.onCreate(savedInstanceState);
+           setContentView(R.layout.activity_main);
+
+           // Initialize database helper and UI elements
+           dbHelper = new ClickDbHelper(this);
+           listView = findViewById(R.id.listView);
+
+           displayData();
+       }
+
+       private void displayData() {
+           SQLiteDatabase db = dbHelper.getReadableDatabase();
+           String[] projection = {
+               ClickDbHelper.MyContract.Click.COLUMN_1,
+               ClickDbHelper.MyContract.Click.COLUMN_2
+           };
+
+           Cursor cursor = db.query(
+               ClickDbHelper.MyContract.Click.TABLE_NAME,
+               projection,
+               null,
+               null,
+               null,
+               null,
+               null
+           );
+
+           // Create an array to store the data for the adapter
+           String[] data = new String[cursor.getCount()];
+           int index = 0;
+
+           while (cursor.moveToNext()) {
+               String column1 = cursor.getString(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click.COLUMN_1));
+               String column2 = cursor.getString(cursor.getColumnIndexOrThrow(ClickDbHelper.MyContract.Click.COLUMN_2));
+
+               // Combine the columns into a single string
+               String rowData = column1 + " - " + column2;
+               data[index] = rowData;
+               index++;
+           }
+
+           cursor.close();
+           db.close();
+
+           // Create an ArrayAdapter to populate the ListView
+           ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item_layout, data);
+
+           // Set the adapter for the ListView
+           listView.setAdapter(adapter);
+       }
+   }
+   ```
+
+Make sure to adjust the code based on your specific table structure, column names, and layout requirements. The example assumes you have a `ListView` with the ID `listView` in your `activity_main.xml` layout file.

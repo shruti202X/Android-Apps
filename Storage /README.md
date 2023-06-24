@@ -435,3 +435,24 @@ To display SQLite database data in a table format in Android, you can use a `Lis
    ```
 
 Make sure to adjust the code based on your specific table structure, column names, and layout requirements. The example assumes you have a `ListView` with the ID `listView` in your `activity_main.xml` layout file.
+
+---
+
+## Starting with the app
+
+### Creating the activity_main.xml file
+
+It has an App Bar with the text, "What are you feeling".
+A Relative Layout consisting of EditText and an OK Button.
+Another button "Show Stats".
+All these components are bounded by a Relative Layout.
+
+[activity_main.xml](activity_main.xml)
+
+### Creating the ClickDbHelper Class
+
+`ClickDbHelper` should extend `SQLiteOpenHelper`.
+Create `MyContract` class to define Schema.
+Using [official documentation](https://developer.android.com/reference/android/database/sqlite/SQLiteOpenHelper) override necessary functions
+
+[ClickDbHelper.java](ClickDbHelper.java)

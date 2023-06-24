@@ -456,3 +456,13 @@ Create `MyContract` class to define Schema.
 Using [official documentation](https://developer.android.com/reference/android/database/sqlite/SQLiteOpenHelper) override necessary functions
 
 [ClickDbHelper.java](ClickDbHelper.java)
+
+### Create MainActivity
+
+Follow the basic steps of initializing view and dbHelper.
+`setOnClickListener` on `okButton` to write to database
+Connection could be made open all the time : [MainActivity_1.java](MainActivity_1.java)
+Connection could be made open at the time of use : [MainActivity_2.java](MainActivity_2.java)
+
+### Create activity_main2.xml
+---

@@ -440,29 +440,62 @@ Make sure to adjust the code based on your specific table structure, column name
 
 ## Starting with the app
 
-### Creating the activity_main.xml file
+### 1. Creating the activity_main.xml file
 
 It has an App Bar with the text, "What are you feeling".
+
 A Relative Layout consisting of EditText and an OK Button.
+
 Another button "Show Stats".
+
 All these components are bounded by a Relative Layout.
 
 [activity_main.xml](activity_main.xml)
 
-### Creating the ClickDbHelper Class
+### 2. Creating the ClickDbHelper Class
 
 `ClickDbHelper` should extend `SQLiteOpenHelper`.
+
 Create `MyContract` class to define Schema.
+
 Using [official documentation](https://developer.android.com/reference/android/database/sqlite/SQLiteOpenHelper) override necessary functions
 
 [ClickDbHelper.java](ClickDbHelper.java)
 
-### Create MainActivity
+### 3. Create MainActivity
 
 Follow the basic steps of initializing view and dbHelper.
+
 `setOnClickListener` on `okButton` to write to database
+
 Connection could be made open all the time : [MainActivity_1.java](MainActivity_1.java)
+
 Connection could be made open at the time of use : [MainActivity_2.java](MainActivity_2.java)
 
-### Create activity_main2.xml
+### 4. Create activity_main2.xml
+
+Create a listView inside a Linear Layout
+
+[activity_main2.xml](activity_main2.xml)
+
+### 5. Create MainActivity2.java
+
+Update AndroidManifest.xml file with activity 2
+```xml
+<activity
+android:name=".MainActivity2"
+android:exported="false" />
+```
+exported defines if the activity file is inter-application sharable
+
+Fetch Readable database
+
+Create a cursor for required query
+
+Fetxh data using cursor
+
+Display database using ListView and ArrayAdapter
+
+[MainActivity2.java](MainActivity2.java)
+
 ---

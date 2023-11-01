@@ -1,4 +1,8 @@
-# TIme Results
+# Check out Pomodoro folder for source files
+
+---
+
+# Time Results
 
 **Time's Result** : What are the results from time
 
